@@ -10,7 +10,7 @@
 (def truncate 1500);;FIXME if lowered for testing, might fail due to current > truncate
 (def typicalsourceframe [1920 1080])
 
-(defn create-cir-map[x] (into {} (map vec (partition 2 1 (conj x (first x))))))
+(defn create-cir-map[x] (into {} (map vec (partition 2 1 (conj (vec x) (first x))))))
 
 (def hdframes [[640 720] [1280 720]]) ;;first must be half size, assumption below
 (def hdframes-map-first (first hdframes))
@@ -47,7 +47,7 @@
 
 (defn add-images-f [state]
   (let [source (if (:orig-size state) :origjpegs :thumbjpegs)
-        images (->> state source clojure.java.io/file file-seq rest (take truncate) vec)
+        images (->> state source clojure.java.io/file file-seq rest (take truncate) vec) ;;FIXME Could not find a method to load .../.DS_Store
         cnt (count images)]
     (assoc state
            :all-images (mapv q/load-image images)
@@ -108,7 +108,7 @@
 
 (defn draw-state-define [state]
   (q/background 240)
-  #_(prn "DEFINE" (dissoc state :all-images :int-center-xf :int-center-yf))
+  #_(prn "DEFINE" (dissoc state :all-images :int-center-xf :int-center-yf :int-zoom-f))
   (let [cu (:current state)
         ce (:centers state)
         zo (:zoom state)
@@ -133,7 +133,7 @@
 
 (defn draw-state-replay [state]
   (q/background 240)
-  #_(prn "REPLAY" (dissoc state :all-images :int-center-xf :int-center-yf ))
+  #_(prn "REPLAY" (dissoc state :all-images :int-center-xf :int-center-yf :int-zoom-f))
   (let [cu (:current state)
         ce (:centers state)
         is (:all-images state)
@@ -177,11 +177,7 @@
        {:define draw-state-define :replay draw-state-replay :traj draw-state-traj})
    state))
 
-
-(defn inc10[x] (+ x 10))
-(defn dec10[x] (+ x -10))
-
-(def zoom-map {\q 1.0 \Q 1.1 \w 0.9 \W 1.2 \e 0.8 \E 1.3 \r 0.7 \R 1.4 \t 0.6 \T 1.5 \y 0.5 \Y 1.6 \u 0.4 \U 1.7 \i 0.3 \I 1.8 \o 0.2 \O 1.9 \p 0.1 \P 2.0})
+(def zoom-map {\q 1.0 \Q 1.188 \w 0.9 \W 1.39 \e 0.8 \E 1.61 \r 0.7 \R 1.84 \t 0.6 \T 2.1 \y 0.5 \Y 2.37 \u 0.4 \U 2.657 \i 0.3 \I 2.96 \o 0.2 \O 2.96 \p 0.1 \P 3.27})
 
 (defn define-options [state event]
   (if-let [z (-> event :raw-key zoom-map)]
@@ -201,9 +197,10 @@
     ;;skip first frame which in fact is last one
     (into {} (map #(vector % (format "%s/%s.%s.%06d.tiff" path mode ts %)) (range 1 size)))))
 
-(defn find-next-waypoint [state]
-  (let [all (sort (keys (merge (:zoom state) (:centers state))))
-        f (first (filter #(< (:current state) %) all))
+(defn find-next-waypoint [state reversed]
+  (let [[direction compare] (if reversed [reverse >] [identity <])
+        all (direction (sort (keys (merge (:zoom state) (:centers state)))))
+        f (first (filter #(compare (:current state) %) all))
         ff (first all)]
     (if f
       f
@@ -222,9 +219,10 @@
     \space (update state :paused not)
     \, (update state :current #(-> % dec (mod (:num-of-frames state))))
     \. (update state :current #(-> % inc (mod (:num-of-frames state))))
-    \< (update state :current #(-> % dec10 (mod (:num-of-frames state))))
-    \> (update state :current #(-> % inc10 (mod (:num-of-frames state))))
-    \/ (assoc state :current (find-next-waypoint state))
+    \< (update state :current #(-> % ((partial + -10)) (mod (:num-of-frames state))))
+    \> (update state :current #(-> % ((partial + +10)) (mod (:num-of-frames state))))
+    \/ (assoc state :current (find-next-waypoint state false))
+    \? (assoc state :current (find-next-waypoint state true))
 
     ;;frame size, interpolation
     \f (add-frame-f (assoc state :hdframe (hdframes-map (:hdframe state))))
@@ -243,7 +241,7 @@
            (prn "VIDDUMP START")
            (assoc state :viddump (gen-viddump-todo "viddump" (-> state :mode name) (:num-of-frames state))))
          (do
-           (prn "VIDDUMP PENDING")
+           (prn "VIDDUMP IS PENDING, try later")
            state))
     \d (do
          (println "STATE:" (dissoc state :all-images :int-center-xf :int-center-yf :int-zoom-f))
@@ -251,7 +249,7 @@
     state))
 
 (defn key-press [state event]
-  #_(prn "key" event state)
+  #_(prn "key" event (dissoc state :all-images :int-center-xf :int-center-yf :int-zoom-f))
   (if (-> state :mode (= :define))
     (define-options (main-options state event) event)
     (main-options state event)))
