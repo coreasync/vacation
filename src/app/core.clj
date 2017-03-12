@@ -276,7 +276,7 @@
     (prn "INIT SIZE" init-size)
     (q/defsketch app
       :title "vacations"
-      :size (identity init-size) ;;FIXME why!
+      :size (identity init-size) ;;FIXME why identity needed, macro?
       :setup (partial setup (assoc project-state :orig-size orig-size :orig-size-factor (if orig-size scale 1)))
       :update update-state
       :draw draw-state

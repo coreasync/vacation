@@ -5,4 +5,4 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [quil "2.3.0"]
                  [incanter "1.5.7"]]
-  :jvm-opts ["-Xss128m" "-Xmx12g" "-XX:MaxInlineLevel=16" "-XX:+UseSerialGC"])
+  :jvm-opts ["-Xss128m" "-Xmx32g" "-XX:MaxInlineLevel=16" "-XX:+UseSerialGC"])
