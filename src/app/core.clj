@@ -16,7 +16,7 @@
 (def hdframes-map-first (first hdframes))
 (def hdframes-map (create-cir-map hdframes))
 
-(def itrps [[:linear] [:cubic-hermite]]) ;;[:polynomial] [:cubic] [:linear-least-squares]
+(def itrps [[:cubic-hermite] [:linear]]) ;;[:polynomial] [:cubic] [:linear-least-squares]
 (def itrps-first (first itrps))
 (def itrps-map (create-cir-map itrps))
 
@@ -249,7 +249,7 @@
     state))
 
 (defn key-press [state event]
-  #_(prn "key" event (dissoc state :all-images :int-center-xf :int-center-yf :int-zoom-f))
+  #_(prn "key" event "at" (q/mouse-x) (q/mouse-y))
   (if (-> state :mode (= :define))
     (define-options (main-options state event) event)
     (main-options state event)))
@@ -271,11 +271,12 @@
   (let [project-state-orig (s-from-edn project-file)
         project-state (if force-half (assoc project-state-orig :hdframe hdframes-map-first) project-state-orig)
         orig-geom (:orig-geom project-state)
-        scale (:thumbscale project-state)]
-    #_(prn "INIT SIZE" (if orig-size (:hdframe project-state) (mapv #(/ % scale) orig-geom)))
+        scale (:thumbscale project-state)
+        init-size (if orig-size (:hdframe project-state) (mapv #(/ % scale) orig-geom))]
+    (prn "INIT SIZE" init-size)
     (q/defsketch app
       :title "vacations"
-      :size (if orig-size (:hdframe project-state) (mapv #(/ % scale) orig-geom))
+      :size (identity init-size) ;;FIXME why!
       :setup (partial setup (assoc project-state :orig-size orig-size :orig-size-factor (if orig-size scale 1)))
       :update update-state
       :draw draw-state
