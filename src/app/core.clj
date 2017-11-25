@@ -12,7 +12,7 @@
 
 (defn create-cir-map[x] (into {} (map vec (partition 2 1 (conj (vec x) (first x))))))
 
-(def hdframes [[640 720] [1280 720]]) ;;first must be half size, assumption below
+(def hdframes [[640 720] [1280 720] [1920 1080]]) ;;first must be half size, assumption below
 (def hdframes-map-first (first hdframes))
 (def hdframes-map (create-cir-map hdframes))
 
@@ -33,10 +33,14 @@
       state)))
 
 (defn add-int-zoom-f [state]
-  (let [zoom (:zoom state)]
-    (if (<= 2 (count zoom)) ;;FIXME if center points removed, all interpol fun remains
-      (assoc state :int-zoom-f (mk-int-f (into [] zoom) (:inter state)))
-      state)))
+  (let [state2 (if (-> state :zoom count (= 0))
+                 (assoc state :zoom {0 1.0 (-> state :all-images count) 1.0})
+                 state
+                 )
+        zoom (:zoom state2)
+        ]
+    (assoc state2 :int-zoom-f (mk-int-f (into [] zoom) (:inter state))) ;;FIXME if center points removed, all interpol fun remains
+    ))
 
 (defn add-frame-f [state]
   (let [[dx dy] (:hdframe state)
@@ -149,6 +153,7 @@
             cropped (q/get-pixel (is cu) (- x (* z fx 0.5)) (- y (* z fy 0.5)) (* z fx) (* z fy))
             _ (.resize cropped fx fy)]
         (q/set-image 0 0 cropped)))))
+
 
 (defn draw-state-traj [state]
   (q/background 240)
