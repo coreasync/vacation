@@ -18,6 +18,14 @@ user=> (run-editor  "test.edn" false false)
 
 ```
 
+generate
+===
+```
+user=> (use 'app.core :reload)
+user=> (run-editor  "test.edn" true false)
+
+```
+
 auxiliary commands and tools
 ====
 ```
@@ -26,4 +34,8 @@ mogrify -resize 50% -quality 100 *.png
 ffmpeg -framerate 30 -i replay.date.000%03d.tiff -vcodec libx264 -vb 40M -pix_fmt yuv420p myvideo.mp4
 for i in range(1,n):
   print "convert left%05d.jpg right%05d.jpg  +append output%05d.jpg"%(i,i,i)
+
+
+ffmpeg -i abc.MOV -vn -acodec copy output-audio.aac
+ffmpeg -framerate 30 -i replay.date.000%03d.tiff -i .../output-audio.aac -vcodec libx264 -vb 40M -pix_fmt yuv420p myvideo.mp4
 ```
