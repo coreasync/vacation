@@ -42,10 +42,11 @@ ffmpeg -framerate 30 -i replay.date.000%03d.tiff -i .../output-audio.aac -vcodec
 
 side by side
 ====
+```
 ffmpeg -i m.mp4 m_%04d.png
 ffmpeg -i s.mp4 s_%04d.png
 file m1000.png 
 mogrify -crop 640x720+220+0 s*.png 
 mogrify -crop 640x720+320+0 m*.png
 for i in range(1000,4500): print "convert m%000i.png s%000i.png +append r%000i.png"%(i,i,i)
-
+```
