@@ -41,12 +41,22 @@ ffmpeg -framerate 30 -i replay.date.000%03d.tiff -i .../output-audio.aac -vcodec
 ```
 
 side by side
+
+use https://github.com/ap/rename/blob/master/rename
+
 ====
 ```
+ffmpeg -i a.mp4 -s hd720 -c:v libx264 -crf 23 -strict -2 a720.mp4
+
+
 ffmpeg -i m.mp4 m_%04d.png
 ffmpeg -i s.mp4 s_%04d.png
 file m1000.png 
+
+
+ ~/rename -N 1000 's/.*/x$N.png/' *.png
+ 
 mogrify -crop 640x720+220+0 s*.png 
 mogrify -crop 640x720+320+0 m*.png
-for i in range(1000,4500): print "convert m%000i.png s%000i.png +append r%000i.png"%(i,i,i)
+python -c 'for i in range(1,4000): print "convert m%04d.png s%04d.png +append r%04d.png"%(i,i,i)' > s
 ```
